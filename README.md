@@ -6,7 +6,7 @@ Navigate to the project directory:
 
 ```bash
 cd UK-Map-D3-Visualization
-
+```
 
 Open the index.html file in a web browser to see the visualization.
 
