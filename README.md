@@ -4,8 +4,7 @@ This HTML code creates an interactive map of the United Kingdom using D3.js, whe
 Getting Started
 Navigate to the project directory:
 
-bash
-Copy code
+'''bash
 cd UK-Map-D3-Visualization
 (Include steps here for any additional setup required, like installing dependencies)
 
