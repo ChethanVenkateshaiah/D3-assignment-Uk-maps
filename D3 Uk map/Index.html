@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>UK Map Page</title>
+    <script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
+    <!-- Styles for the page background and map elements were defined -->
+    <style>
+      body {
+        background: linear-gradient(to bottom, #071b7f, hsl(203, 55%, 55%)); /* Adjust the colors as needed */
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      h1 {
+      color: #ffffff; /* Change the color to your desired color */
+      font-family: 'Arial', sans-serif; /* Change the font family to your desired font */
+      text-align: center;
+    }
+    h2 {
+  color: white;
+}
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    input[type="range"] {
+      width: 80%;
+      margin-bottom: 10px;
+    }
+    .country {
+    fill: #5ad21e;
+    stroke: #04683b;
+    stroke-width: 0.5;
+  }
+
+  .towns {
+    stroke-width: 1px;
+  }
+
+  .city_name {
+    fill: white;
+    font-size: 10px;
+  }
+
+  #townCount {
+    color: white;
+  }
+  #tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px;
+    border-radius: 3px;
+    pointer-events: none;
+  }
+
+  /* Hide the tooltip by default */
+  .hidden {
+    display: none;
+  }
+    </style>
+  </head>
+
+  <body>
+    <h1> United Kingdom </h1>
+    <h2>Adjust the slider to discover the number of towns</h2>
+    <input type="range" id="townsSlider" min="1" max="500" value="50" />
+    <span id="townCount">50</span>
+    <button id="reloadButton">Reload Data</button>
+    <div id="tooltip" class="hidden"></div>
+    <div id="map"></div>
+    <script>
+      // Define new variables
+      var newMargins = {
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      };
+      var newMapHeight = 900;
+      var newMapWidth = 900;
+
+      var newSvg = d3
+        .select("#map")
+        .append("svg")
+        .attr("height", newMapHeight)
+        .attr("width", newMapWidth)
+        .append("g")
+        .attr("id", "svg_id");
+
+      var newProjection = d3
+        .geoNaturalEarth1()
+        .translate([newMapWidth / 2, newMapHeight / 2])
+        .scale(3000)
+        .center([-5, 53]);
+      var newPath = d3.geoPath().projection(newProjection);
+
+      // Function to update the map with new data
+      function updateNewMap() {
+        d3.json("https://yamu.pro/gb.json", function (error, ukData) {
+          newSvg
+            .selectAll(".country")
+            .data(ukData.features)
+            .enter()
+            .append("path")
+            .attr("class", "country")
+            .attr("d", newPath)
+            .append("title")
+            .text("Great Britain");
+        });
+
+        var newTownCount = +document.getElementById("townCount").textContent;
+        var newTownDataUrl = "http://34.38.72.236/Circles/Towns/" + newTownCount;
+
+        d3.json(newTownDataUrl, function (error, newTownData) {
+          newSvg.selectAll(".towns").remove();
+          newSvg.selectAll(".city_name").remove();
+
+          newSvg
+            .selectAll(".towns")
+            .data(newTownData)
+            .enter()
+            .append("svg:image")
+            .attr("class", "towns")
+            .attr("xlink:href", "map.png")
+            .attr("x", function (d) {
+              var coords = newProjection([d.lng, d.lat]);
+              return coords[0];
+            })
+            .attr("y", function (d) {
+              var coords = newProjection([d.lng, d.lat]);
+              return coords[1];
+            })
+            .attr("width", 25)
+            .attr("height", 20)
+            .on("mouseover", function (d) {
+              // Show the tooltip and set its content
+              var newTooltip = d3.select("#tooltip");
+              newTooltip.html(
+                "<strong>Town:</strong> " + d.Town + "<br>" +
+                "<strong>County:</strong> " + d.County + "<br>" +
+                "<strong>Population:</strong> " + d.Population
+              );
+
+              // Position the tooltip relative to the mouse cursor
+              newTooltip.style("left", d3.event.pageX + "px");
+              newTooltip.style("top", d3.event.pageY - 40 + "px");
+
+              // Show the tooltip
+              newTooltip.classed("hidden", false);
+            })
+            .on("mouseout", function () {
+              // Hide the tooltip when the mouse moves away
+              d3.select("#tooltip").classed("hidden", true);
+            });
+          // City Name
+          newSvg
+            .selectAll("city_name")
+            .data(newTownData)
+            .enter()
+            .append("text")
+            .attr("class", "city_name")
+            .attr("x", function (d) {
+              var coords = newProjection([d.lng, d.lat]);
+              return coords[0];
+            })
+            .attr("y", function (d) {
+              var coords = newProjection([d.lng, d.lat]);
+              return coords[1];
+            })
+            .text(function (d) {
+              return d.Town;
+            })
+            .attr("dx", "15")
+            .attr("dy", "10");
+        });
+      }
+
+      // Reload data and update the map on button click
+      document
+        .getElementById("reloadButton")
+        .addEventListener("click", updateNewMap);
+
+      // Update the town count based on the slider value
+      var newTownsSlider = document.getElementById("townsSlider");
+      var newTownCountSpan = document.getElementById("townCount");
+
+      newTownsSlider.addEventListener("input", function () {
+        var value = this.value;
+        newTownCountSpan.textContent = value;
+      });
+
+      // Initial map rendering
+      updateNewMap();
+    </script>
+  </body>
+</html>
