@@ -12,8 +12,7 @@ cd UK-Map-D3-Visualization
 Open the index.html file in a web browser to see the visualization.
 
 External Data Sources
-The application fetches map data and population information from external APIs/sources (specify the sources if necessary).
-
+The application fetches map data and population information from external APIs/sources.
 How to Use
 Adjust the Population Slider to display towns within a specific population range.
 Click on the Reload Data button to fetch the latest data and update the map accordingly.
